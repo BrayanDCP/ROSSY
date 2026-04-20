@@ -1,138 +1,112 @@
 <?php
-/* ============================================
-   php/auth.php
-   Login y Registro – COMPLETAMENTE OPCIONAL
-   La compra/venta funciona siempre como invitado.
-   El registro solo sirve para guardar historial.
+declare(strict_types=1);
 
-   POST { accion: 'login' | 'registro' | 'logout' | 'estado' }
-   ============================================ */
+session_start();
+require_once __DIR__ . '/conexion.php';
 
-require_once 'conexion.php';
+function jsonResponse(array $data, int $status = 200): void
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+function getCurrentUser(): ?array
+{
+    if (empty($_SESSION['usuario_id'])) {
+        return null;
+    }
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
+    try {
+        $pdo = obtenerConexion();
+        if (!$pdo) {
+            return null;
+        }
+        $stmt = $pdo->prepare('SELECT id, nombre, apellido, email, telefono, direccion, pais, provincia, distrito, dni, edad, role FROM usuarios WHERE id = :id AND estado = "activo"');
+        $stmt->execute(['id' => $_SESSION['usuario_id']]);
+        $user = $stmt->fetch();
+        return $user ?: null;
+    } catch (PDOException $e) {
+        return null;
+    }
+}
 
-// Iniciar sesión
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'lifetime' => 86400 * 7,
-        'httponly' => true,
-        'samesite' => 'Lax',
+function findUserByEmail(string $email): ?array
+{
+    $pdo = obtenerConexion();
+    if (!$pdo) {
+        return null;
+    }
+    $stmt = $pdo->prepare('SELECT * FROM usuarios WHERE email = :email LIMIT 1');
+    $stmt->execute(['email' => $email]);
+    $user = $stmt->fetch();
+    return $user ?: null;
+}
+
+function createUser(string $nombre, string $apellido, string $email, string $password, string $telefono = '', string $dni = '', ?int $edad = null, string $pais = '', string $provincia = '', string $distrito = '', string $direccion = ''): array
+{
+    $pdo = obtenerConexion();
+    if (!$pdo) {
+        throw new Exception('Error de conexión a la base de datos');
+    }
+    $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, apellido, email, password_hash, telefono, dni, edad, pais, provincia, distrito, direccion, role, estado, verificado) VALUES (:nombre, :apellido, :email, :password_hash, :telefono, :dni, :edad, :pais, :provincia, :distrito, :direccion, :role, :estado, :verificado)');
+    $stmt->execute([
+        'nombre' => $nombre,
+        'apellido' => $apellido,
+        'email' => $email,
+        'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+        'telefono' => $telefono,
+        'dni' => $dni,
+        'edad' => $edad,
+        'pais' => $pais,
+        'provincia' => $provincia,
+        'distrito' => $distrito,
+        'direccion' => $direccion,
+        'role' => 'user',
+        'estado' => 'activo',
+        'verificado' => 0,
     ]);
-    session_start();
+
+    return [
+        'id' => (int) $pdo->lastInsertId(),
+        'nombre' => $nombre,
+        'apellido' => $apellido,
+        'email' => $email,
+        'telefono' => $telefono,
+        'dni' => $dni,
+        'edad' => $edad,
+        'pais' => $pais,
+        'provincia' => $provincia,
+        'distrito' => $distrito,
+        'direccion' => $direccion,
+        'role' => 'user',
+    ];
 }
 
-/* ---- GET: consultar estado de sesión ---- */
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $usuario = usuarioSesion();
-    responderJSON(['logueado' => $usuario !== null, 'usuario' => $usuario]);
+function loginUser(array $user): void
+{
+    session_regenerate_id(true);
+    $_SESSION['usuario_id'] = (int) $user['id'];
+    $_SESSION['usuario_nombre'] = $user['nombre'];
+    $_SESSION['usuario_email'] = $user['email'];
+
+    $pdo = obtenerConexion();
+    if ($pdo) {
+        $stmt = $pdo->prepare('UPDATE usuarios SET ultimo_login = NOW() WHERE id = :id');
+        $stmt->execute(['id' => $user['id']]);
+    }
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    responderJSON(['error' => 'Método no permitido'], 405);
-}
-
-$entrada = obtenerBodyJSON();
-$accion  = sanitizar($entrada['accion'] ?? '');
-$pdo     = obtenerConexion();
-
-/* ============ ESTADO ============ */
-if ($accion === 'estado') {
-    $usuario = usuarioSesion();
-    responderJSON(['logueado' => $usuario !== null, 'usuario' => $usuario]);
-}
-
-/* ============ REGISTRO ============ */
-if ($accion === 'registro') {
-    $nombre = sanitizar($entrada['nombre'] ?? '');
-    $correo = filter_var(trim($entrada['correo'] ?? ''), FILTER_SANITIZE_EMAIL);
-    $pass   = $entrada['pass'] ?? '';
-
-    if (empty($nombre) || empty($correo) || empty($pass)) {
-        responderJSON(['error' => 'Completa todos los campos', 'campo' => 'general'], 400);
-    }
-    if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-        responderJSON(['error' => 'El correo no es válido', 'campo' => 'correo'], 400);
-    }
-    if (mb_strlen($pass) < 6) {
-        responderJSON(['error' => 'La contraseña debe tener al menos 6 caracteres', 'campo' => 'pass'], 400);
-    }
-
-    $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE correo = :correo LIMIT 1");
-    $stmt->execute([':correo' => $correo]);
-    if ($stmt->fetch()) {
-        responderJSON(['error' => 'Este correo ya está registrado. ¿Quieres iniciar sesión?', 'campo' => 'correo'], 409);
-    }
-
-    $hash = password_hash($pass, PASSWORD_BCRYPT, ['cost' => 12]);
-    $stmt = $pdo->prepare("INSERT INTO usuarios (nombre, correo, contrasena, rol) VALUES (:n, :c, :h, 'cliente')");
-    $stmt->execute([':n' => $nombre, ':c' => $correo, ':h' => $hash]);
-    $nuevoId = (int)$pdo->lastInsertId();
-
-    $_SESSION['usuario_id']     = $nuevoId;
-    $_SESSION['usuario_nombre'] = $nombre;
-    $_SESSION['usuario_rol']    = 'cliente';
-
-    responderJSON([
-        'ok'      => true,
-        'mensaje' => "¡Bienvenida, $nombre! Tu cuenta fue creada.",
-        'usuario' => ['id' => $nuevoId, 'nombre' => $nombre, 'rol' => 'cliente'],
-    ], 201);
-}
-
-/* ============ LOGIN ============ */
-if ($accion === 'login') {
-    $correo = filter_var(trim($entrada['correo'] ?? ''), FILTER_SANITIZE_EMAIL);
-    $pass   = $entrada['pass'] ?? '';
-
-    if (empty($correo) || empty($pass)) {
-        responderJSON(['error' => 'Ingresa tu correo y contraseña'], 400);
-    }
-
-    $stmt = $pdo->prepare("SELECT id, nombre, contrasena, rol, activo FROM usuarios WHERE correo = :correo LIMIT 1");
-    $stmt->execute([':correo' => $correo]);
-    $usuario = $stmt->fetch();
-
-    if (!$usuario) {
-        responderJSON(['error' => 'No encontramos una cuenta con ese correo'], 401);
-    }
-    if (!$usuario['activo']) {
-        responderJSON(['error' => 'Tu cuenta está desactivada. Contáctanos por WhatsApp.'], 403);
-    }
-    if (!password_verify($pass, $usuario['contrasena'])) {
-        responderJSON(['error' => 'La contraseña es incorrecta'], 401);
-    }
-
-    $_SESSION['usuario_id']     = $usuario['id'];
-    $_SESSION['usuario_nombre'] = $usuario['nombre'];
-    $_SESSION['usuario_rol']    = $usuario['rol'];
-
-    if (password_needs_rehash($usuario['contrasena'], PASSWORD_BCRYPT, ['cost' => 12])) {
-        $nuevoHash = password_hash($pass, PASSWORD_BCRYPT, ['cost' => 12]);
-        $pdo->prepare("UPDATE usuarios SET contrasena = ? WHERE id = ?")->execute([$nuevoHash, $usuario['id']]);
-    }
-
-    responderJSON([
-        'ok'      => true,
-        'mensaje' => "¡Bienvenida de nuevo, {$usuario['nombre']}!",
-        'usuario' => ['id' => $usuario['id'], 'nombre' => $usuario['nombre'], 'rol' => $usuario['rol']],
-    ]);
-}
-
-/* ============ LOGOUT ============ */
-if ($accion === 'logout') {
+function logoutUser(): void
+{
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
-        $p = session_get_cookie_params();
-        setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params['path'], $params['domain'],
+            $params['secure'], $params['httponly']
+        );
     }
     session_destroy();
-    responderJSON(['ok' => true, 'mensaje' => 'Sesión cerrada']);
 }
-
-responderJSON(['error' => 'Acción no reconocida'], 400);

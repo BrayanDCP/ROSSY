@@ -17,6 +17,7 @@ let modalImagenes       = [];
 let modalImgIndex       = 0;
 let modalTallaSeleccionada = '';
 let modalColorSeleccionado = '';
+let usuarioActual = null;
 
 const WA_NUMERO = '51993304046';
 
@@ -63,12 +64,20 @@ function getColorCSS(nombre) {
 document.addEventListener('DOMContentLoaded', () => {
   iniciarHeader();
   iniciarMenuMobile();
+  renderizarProductos(obtenerProductosDemo());
   cargarProductos();
   actualizarCarritoUI();
   iniciarFiltros();
   iniciarFormularios();
+  iniciarAuthForms();
+  cargarSesion();
   iniciarScrollAnimaciones();
   iniciarNavLinks();
+  iniciarAnimacionesInteractivas();
+  document.body.classList.add('loaded');
+  document.addEventListener('click', () => {
+    document.getElementById('accountMenu')?.classList.remove('open');
+  });
 });
 
 /* ============================================================
@@ -124,6 +133,15 @@ function iniciarNavLinks() {
   secciones.forEach(s => obs.observe(s));
 }
 
+function iniciarAnimacionesInteractivas() {
+  document.body.addEventListener('click', event => {
+    const boton = event.target.closest('button, .btn, .nav-link, .filtro-btn');
+    if (!boton) return;
+    boton.classList.add('btn-press');
+    setTimeout(() => boton.classList.remove('btn-press'), 220);
+  });
+}
+
 /* ============================================================
    CARGAR PRODUCTOS
    ============================================================ */
@@ -140,106 +158,33 @@ async function cargarProductos() {
   renderizarProductos(productosTodos);
 }
 
-/* ---- Productos de demostración con múltiples imágenes ---- */
 function obtenerProductosDemo() {
-  return [
-    {
-      id:1,
-      nombre:'Casaca Jean Clásica',
-      precio:'89.90',
-      precio_original:'120.00',
-      imagenes:['casaca1.jpg','casaca2.jpg','casaca3.jpg'],
-      tallas:['S','M','L','XL'],
-      colores:['Azul','Negro','Blanco'],
-      categoria:'Casaca Jean',
-      badge:'oferta',
-      descripcion:'Casaca de jean de alta calidad, corte clásico que combina con todo.'
-    },
-    {
-      id:2,
-      nombre:'Blusa Elegante Rosa',
-      precio:'55.00',
-      precio_original:'',
-      imagenes:['blusa1.jpg','blusa2.jpg'],
-      tallas:['XS','S','M','L'],
-      colores:['Rosa','Blanco','Crema'],
-      categoria:'blusas',
-      badge:'nuevo',
-      descripcion:'Blusa femenina de tela suave, perfecta para el día a día.'
-    },
-    {
-      id:3,
-      nombre:'Conjunto Casual Chic',
-      precio:'130.00',
-      precio_original:'160.00',
-      imagenes:['conjunto1.jpg','conjunto2.jpg','conjunto3.jpg'],
-      tallas:['S','M','L','XL'],
-      colores:['Dusty Rose','Negro','Beige'],
-      categoria:'conjuntos',
-      badge:'oferta',
-      descripcion:'Conjunto de dos piezas perfecto para cualquier ocasión.'
-    },
-    {
-      id:4,
-      nombre:'Chompa Cozy Marsala',
-      precio:'95.00',
-      precio_original:'',
-      imagenes:['chompa1.jpg','chompa2.jpg'],
-      tallas:['S','M','L'],
-      colores:['Marsala','Crema','Gris'],
-      categoria:'Chompa',
-      badge:'nuevo',
-      descripcion:'Chompa abrigadora de tejido suave, ideal para el invierno.'
-    },
-    {
-      id:5,
-      nombre:'Blusa Off Shoulder',
-      precio:'72.00',
-      precio_original:'90.00',
-      imagenes:['blusa3.jpg','blusa4.jpg'],
-      tallas:['XS','S','M','L'],
-      colores:['Crema','Rosa Palo','Blanco'],
-      categoria:'blusas',
-      badge:'oferta',
-      descripcion:'Blusa hombros descubiertos, romántica y versátil.'
-    },
-    {
-      id:6,
-      nombre:'Conjunto Deportivo Elegante',
-      precio:'110.00',
-      precio_original:'140.00',
-      imagenes:['conjunto3.jpg','conjunto4.jpg'],
-      tallas:['S','M','L','XL'],
-      colores:['Negro','Gris','Azul'],
-      categoria:'conjuntos',
-      badge:'oferta',
-      descripcion:'Conjunto deportivo con toque fashion, cómodo y estiloso.'
-    },
-    {
-      id:7,
-      nombre:'Casaca Jean Oversize',
-      precio:'105.00',
-      precio_original:'',
-      imagenes:['casaca3.jpg','casaca4.jpg'],
-      tallas:['S','M','L','XL','XXL'],
-      colores:['Azul','Negro'],
-      categoria:'Casaca Jean',
-      badge:'nuevo',
-      descripcion:'Casaca oversize de tendencia, corte moderno y cómodo.'
-    },
-    {
-      id:8,
-      nombre:'Chompa Tejida Artesanal',
-      precio:'85.00',
-      precio_original:'100.00',
-      imagenes:['chompa2.jpg','chompa3.jpg'],
-      tallas:['S','M','L'],
-      colores:['Dusty Rose','Crema','Marsala'],
-      categoria:'Chompa',
-      badge:'oferta',
-      descripcion:'Chompa de tejido artesanal, única y llena de personalidad.'
-    },
-  ];
+  const productos = [];
+  const precios = [25, 30, 35, 39, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150];
+  for (let i = 1; i <= 39; i++) {
+    let categoria;
+    if (i <= 10) categoria = 'Casaca Jean';
+    else if (i <= 20) categoria = 'blusas';
+    else if (i <= 30) categoria = 'conjuntos';
+    else categoria = 'Chompa';
+
+    const precio = precios[(i - 1) % precios.length];
+    const precioOriginal = Math.random() > 0.65 ? precio + 20 : '';
+
+    productos.push({
+      id: i,
+      nombre: `Prenda ${i}`,
+      precio: precio,
+      precio_original: precioOriginal,
+      imagenes: [`imagen${i}.jpeg`],
+      tallas: ['S', 'M', 'L', 'XL'],
+      colores: ['Rosa', 'Blanco', 'Negro'],
+      categoria: categoria,
+      badge: precioOriginal ? 'oferta' : (i % 5 === 0 ? 'nuevo' : ''),
+      descripcion: `Descripción de la prenda ${i}.`
+    });
+  }
+  return productos;
 }
 
 /* ---- Renderizar grid de productos ---- */
@@ -272,11 +217,12 @@ function renderizarProductos(lista) {
           : ''
         }
         <div class="img-placeholder" style="display:${imgPrin ? 'none' : 'flex'};width:100%;height:100%;background:linear-gradient(135deg,var(--ivory) 0%,var(--dusty-rose) 100%);align-items:center;justify-content:center;font-size:3.5rem;opacity:0.7">
-          ${iconoCategoria(p.categoria)}
+          <img src="${iconoCategoria(p.categoria)}" alt="${p.categoria}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
         </div>
         ${badge}
       </div>
       <div class="producto-body">
+        <span class="producto-categoria">${esc(p.categoria)}</span>
         <h3 class="producto-nombre">${esc(p.nombre)}</h3>
         <div class="producto-meta">
           <span>📏 ${esc(tallas)}</span>
@@ -284,10 +230,10 @@ function renderizarProductos(lista) {
         </div>
         <p class="producto-precio">${original}S/ ${fmtPrecio(p.precio)}</p>
         <div class="producto-btns">
-          <button class="btn btn-primary" onclick="event.stopPropagation();abrirModalProducto(${p.id})">
-            Ver tallas / colores
+          <button type="button" class="btn btn-primary" onclick="abrirModalProductoBtn(event, ${p.id})">
+            Ver producto
           </button>
-          <button class="btn btn-whatsapp" onclick="event.stopPropagation();comprarWhatsApp(${p.id})" title="Comprar por WhatsApp">
+          <button class="btn btn-outline" onclick="event.stopPropagation();comprarWhatsApp(${p.id})" title="Comprar por WhatsApp">
             <svg viewBox="0 0 24 24" fill="currentColor" width="16"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           </button>
         </div>
@@ -316,6 +262,11 @@ function iniciarFiltros() {
 /* ============================================================
    MODAL PRODUCTO – galería + selección de talla y color
    ============================================================ */
+function abrirModalProductoBtn(e, id) {
+  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+  abrirModalProducto(id);
+}
+
 function abrirModalProducto(id) {
   const p = productosTodos.find(x => x.id === id);
   if (!p) return;
@@ -415,6 +366,84 @@ function actualizarGaleria() {
 
   if (!p) return;
 
+  // Reset zoom and pan on image change
+  imgPrincipal.classList.remove('zoomed');
+  imgPrincipal.style.transform = 'scale(1) translate(0, 0)';
+  let scale = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let isDragging = false;
+  let startX, startY;
+
+  const updateTransform = () => {
+    imgPrincipal.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+  };
+
+  // Mouse wheel zoom
+  imgPrincipal.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    scale = Math.max(1, Math.min(5, scale + delta));
+    updateTransform();
+  });
+
+  // Touch zoom (pinch)
+  let initialDistance = 0;
+  let initialScale = 1;
+  imgPrincipal.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      initialDistance = getDistance(e.touches[0], e.touches[1]);
+      initialScale = scale;
+    } else if (e.touches.length === 1 && scale > 1) {
+      // Start pan
+      isDragging = true;
+      startX = e.touches[0].clientX - translateX;
+      startY = e.touches[0].clientY - translateY;
+    }
+  });
+  imgPrincipal.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const currentDistance = getDistance(e.touches[0], e.touches[1]);
+      scale = initialScale * (currentDistance / initialDistance);
+      scale = Math.max(1, Math.min(5, scale));
+      updateTransform();
+    } else if (e.touches.length === 1 && isDragging) {
+      translateX = e.touches[0].clientX - startX;
+      translateY = e.touches[0].clientY - startY;
+      const maxPan = 150 * scale; // Scale pan limit with zoom
+      translateX = Math.max(-maxPan, Math.min(maxPan, translateX));
+      translateY = Math.max(-maxPan, Math.min(maxPan, translateY));
+      updateTransform();
+    }
+  });
+  imgPrincipal.addEventListener('touchend', () => {
+    isDragging = false;
+  });
+
+  // Mouse pan
+  imgPrincipal.addEventListener('mousedown', (e) => {
+    if (scale > 1) {
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      const maxPan = 150 * scale;
+      translateX = Math.max(-maxPan, Math.min(maxPan, translateX));
+      translateY = Math.max(-maxPan, Math.min(maxPan, translateY));
+      updateTransform();
+    }
+  });
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+  });
+
   // Imagen principal
   if (modalImagenes.length > 0) {
     const src = `img/${modalImagenes[modalImgIndex]}`;
@@ -422,15 +451,22 @@ function actualizarGaleria() {
     imgPrincipal.alt   = p.nombre;
     imgPrincipal.style.display = 'block';
     placeholder.style.display  = 'none';
+    imgPrincipal.onclick = () => {
+      // Reset zoom and pan on click
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
+    };
     imgPrincipal.onerror = () => {
       imgPrincipal.style.display = 'none';
       placeholder.style.display  = 'flex';
-      icono.textContent = iconoCategoria(p.categoria);
+      icono.src = iconoCategoria(p.categoria);
     };
   } else {
     imgPrincipal.style.display = 'none';
     placeholder.style.display  = 'flex';
-    icono.textContent = iconoCategoria(p.categoria);
+    icono.src = iconoCategoria(p.categoria);
   }
 
   // Contador
@@ -559,10 +595,18 @@ function comprarWhatsApp(id) {
    CARRITO
    ============================================================ */
 function eliminarDelCarrito(uid) {
-  carrito = carrito.filter(i => i.uid !== uid);
-  guardarCarrito();
-  actualizarCarritoUI();
-  mostrarToast('🗑 Producto eliminado');
+  showConfirm(
+    'Eliminar producto',
+    '¿Deseas eliminar este producto de tu carrito? Esta acción no se puede deshacer.',
+    'Eliminar',
+    'Cancelar',
+    () => {
+      carrito = carrito.filter(i => i.uid !== uid);
+      guardarCarrito();
+      actualizarCarritoUI();
+      mostrarToast('🗑 Producto eliminado');
+    }
+  );
 }
 
 function cambiarCantidad(uid, delta) {
@@ -575,10 +619,18 @@ function cambiarCantidad(uid, delta) {
 
 function limpiarCarrito() {
   if (!carrito.length) return;
-  carrito = [];
-  guardarCarrito();
-  actualizarCarritoUI();
-  mostrarToast('🗑 Carrito vaciado');
+  showConfirm(
+    'Vaciar carrito',
+    '¿Deseas eliminar todos los productos de tu carrito? Puedes seguir comprando en la tienda.',
+    'Vaciar carrito',
+    'Cancelar',
+    () => {
+      carrito = [];
+      guardarCarrito();
+      actualizarCarritoUI();
+      mostrarToast('🗑 Carrito vaciado');
+    }
+  );
 }
 
 function guardarCarrito() {
@@ -596,11 +648,17 @@ function actualizarCarritoUI() {
   if (cont) cont.textContent = totalItems;
 
   if (!carrito.length) {
+    const disponibles = productosTodos.length;
     lista.innerHTML = `
       <div class="carrito-vacio">
         <span>🛍️</span>
-        <p>Tu carrito está vacío</p>
-        <a href="#tienda" class="btn btn-primary">Ver productos</a>
+        <p>Tu carrito aún no tiene productos</p>
+        <p class="carrito-vacio-texto">Visita la tienda y elige tu primera prenda. Toca cualquier producto para ver tallas y colores.</p>
+        ${disponibles ? `<p class="carrito-vacio-info">Actualmente hay ${disponibles} productos disponibles.</p>` : ''}
+        <div class="carrito-vacio-acciones">
+          <button class="btn btn-primary" type="button" onclick="irATienda()">Ir a la tienda</button>
+          <a href="#ofertas" class="btn btn-outline">Ver ofertas</a>
+        </div>
       </div>`;
     if (resumen) resumen.style.display = 'none';
     return;
@@ -609,15 +667,19 @@ function actualizarCarritoUI() {
   if (resumen) resumen.style.display = 'block';
 
   // Items
-  lista.innerHTML = carrito.map(item => {
-    const imgHtml = item.imagen
-      ? `<img src="img/${item.imagen}" alt="${esc(item.nombre)}" onerror="this.style.display='none'">`
-      : `<div style="width:70px;height:70px;border-radius:8px;background:linear-gradient(135deg,var(--ivory),var(--dusty-rose));display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;opacity:0.7">${iconoCategoria(item.categoria)}</div>`;
+  lista.innerHTML = `
+    <div class="carrito-items-header">
+      <div>
+        <span class="carrito-items-label">Tu carrito</span>
+        <strong>${totalItems} artículo${totalItems === 1 ? '' : 's'} listo${totalItems === 1 ? '' : 's'} para comprar</strong>
+      </div>
+      <span class="carrito-items-total">S/ ${fmtPrecio(calcularTotal())}</span>
+    </div>
+  ` + carrito.map(item => {
+    const imgHtml = `<img src="img/${item.imagen}" alt="${esc(item.nombre)}">`;
     return `
     <div class="item-carrito" id="item-${item.uid}">
-      <div style="width:70px;height:70px;border-radius:8px;overflow:hidden;flex-shrink:0">
-        ${imgHtml}
-      </div>
+      <div class="item-thumb">${imgHtml}</div>
       <div class="item-info">
         <p class="item-nombre">${esc(item.nombre)}</p>
         <p class="item-meta">📏 ${esc(item.talla)} · 🎨 ${esc(item.color)}</p>
@@ -669,6 +731,8 @@ function generarMensajeCarrito(extras = {}) {
     msg += `\n🚚 *Entrega:* Envío a domicilio`;
     if (extras.direccion) msg += ` – ${extras.direccion}`;
     if (extras.distrito)  msg += `, ${extras.distrito}`;
+    if (extras.provincia) msg += `, ${extras.provincia}`;
+    if (extras.pais)      msg += `, ${extras.pais}`;
   } else if (extras.entrega === 'retiro') {
     msg += `\n🏪 *Entrega:* Recojo en tienda (C.C. Apecosur, Interior 1121)`;
   }
@@ -692,6 +756,15 @@ function mostrarCheckout() {
   if (!sec) return;
   sec.style.display = 'block';
 
+  if (usuarioActual) {
+    document.getElementById('chkNombre').value = usuarioActual.nombre || '';
+    document.getElementById('chkTelefono').value = usuarioActual.telefono || '';
+    document.getElementById('chkDireccion').value = usuarioActual.direccion || '';
+    document.getElementById('chkDistrito').value = usuarioActual.distrito || '';
+    document.getElementById('chkPais').value = usuarioActual.pais || '';
+    document.getElementById('chkProvincia').value = usuarioActual.provincia || '';
+  }
+
   // Rellenar panel lateral
   const det   = document.getElementById('checkoutDetalle');
   const totEl = document.getElementById('checkoutTotal');
@@ -704,6 +777,9 @@ function mostrarCheckout() {
   }
   if (totEl) totEl.textContent = `S/ ${fmtPrecio(calcularTotal())}`;
 
+  sec.classList.remove('anim-fade-in');
+  void sec.offsetWidth;
+  sec.classList.add('anim-fade-in');
   sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -711,6 +787,12 @@ function ocultarCheckout() {
   const sec = document.getElementById('checkout');
   if (sec) sec.style.display = 'none';
   document.getElementById('carrito')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function irATienda() {
+  const sec = document.getElementById('tienda');
+  if (!sec) return;
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function mostrarEnvio() {
@@ -738,6 +820,8 @@ function iniciarFormularios() {
     const telefono  = document.getElementById('chkTelefono')?.value.trim()  || '';
     const direccion = document.getElementById('chkDireccion')?.value.trim() || '';
     const distrito  = document.getElementById('chkDistrito')?.value.trim()  || '';
+    const pais      = document.getElementById('chkPais')?.value.trim()      || '';
+    const provincia = document.getElementById('chkProvincia')?.value.trim() || '';
     const pago      = document.querySelector('input[name="pago"]:checked')?.value || 'Yape';
     const nota      = document.getElementById('chkNota')?.value.trim()      || '';
 
@@ -745,17 +829,43 @@ function iniciarFormularios() {
       mostrarToast('⚠️ Completa tu nombre y teléfono', 'error');
       return;
     }
-    if (tipoEntrega === 'envio' && !direccion) {
-      mostrarToast('⚠️ Ingresa tu dirección de entrega', 'error');
-      return;
+    if (tipoEntrega === 'envio') {
+      if (!direccion || !distrito || !pais || !provincia) {
+        mostrarToast('⚠️ Completa todos los datos de envío', 'error');
+        return;
+      }
     }
 
-    const extras = { nombre, telefono, direccion, distrito, pago, nota, entrega: tipoEntrega };
+    const extras = { nombre, telefono, direccion, distrito, pais, provincia, pago, nota, entrega: tipoEntrega };
     const msg    = generarMensajeCarrito(extras);
     window.open(`https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(msg)}`, '_blank');
 
     mostrarToast('✅ ¡Pedido enviado! Redirigiendo a WhatsApp...', 'exito');
     setTimeout(() => { limpiarCarrito(); ocultarCheckout(); }, 1800);
+  });
+
+  document.getElementById('perfilForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!usuarioActual) {
+      abrirAuthModal('login');
+      return;
+    }
+
+    const data = new FormData(document.getElementById('perfilForm'));
+    try {
+      const res = await fetch('php/profile.php', { method: 'POST', body: data });
+      const json = await res.json();
+      if (json.success) {
+        mostrarToast(json.message || 'Perfil actualizado', 'exito');
+        usuarioActual = json.user || usuarioActual;
+        actualizarPerfilUI();
+        actualizarCuentaUI();
+      } else {
+        mostrarToast(json.error || 'No se pudo guardar el perfil', 'error');
+      }
+    } catch (error) {
+      mostrarToast('Error de conexión al guardar perfil', 'error');
+    }
   });
 
   /* ---- Contacto ---- */
@@ -772,6 +882,184 @@ function iniciarFormularios() {
   });
 }
 
+function iniciarAuthForms() {
+  const authFeedback = document.getElementById('authFeedback');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const tabs = document.querySelectorAll('.tab-btn');
+
+  const toggleTab = tab => {
+    tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+    if (loginForm) loginForm.classList.toggle('hidden', tab !== 'login');
+    if (registerForm) registerForm.classList.toggle('hidden', tab !== 'register');
+    if (authFeedback) authFeedback.textContent = '';
+  };
+
+  tabs.forEach(btn => btn.addEventListener('click', () => toggleTab(btn.dataset.tab)));
+  toggleTab('login');
+
+  const submitForm = async form => {
+    if (!form) return;
+    const action = form.action;
+    const data = new FormData(form);
+    try {
+      const res = await fetch(action, { method: 'POST', body: data });
+      const json = await res.json();
+      if (json.success) {
+        mostrarToast(json.message || 'Operación exitosa', 'exito');
+        if (authFeedback) authFeedback.textContent = json.message || 'Operación exitosa';
+        await cargarSesion();
+        if (json.success) {
+          cerrarAuthModal();
+        }
+        if (form === registerForm) {
+          toggleTab('login');
+          form.reset();
+        }
+      } else {
+        mostrarToast(json.error || 'Error al procesar', 'error');
+        if (authFeedback) authFeedback.textContent = json.error || 'Error al procesar';
+      }
+    } catch (error) {
+      mostrarToast('Error de conexión con el servidor', 'error');
+      if (authFeedback) authFeedback.textContent = 'Error de conexión con el servidor';
+    }
+  };
+
+  loginForm?.addEventListener('submit', e => {
+    e.preventDefault();
+    submitForm(loginForm);
+  });
+
+  registerForm?.addEventListener('submit', e => {
+    e.preventDefault();
+    submitForm(registerForm);
+  });
+}
+
+function abrirAuthModal(tab = 'login') {
+  const modal = document.getElementById('authModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  const tabs = document.querySelectorAll('.tab-btn');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+  if (loginForm) loginForm.classList.toggle('hidden', tab !== 'login');
+  if (registerForm) registerForm.classList.toggle('hidden', tab !== 'register');
+  document.getElementById('authFeedback').textContent = '';
+}
+
+function cerrarAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function toggleAccountMenu(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('accountMenu');
+  if (!menu) return;
+  menu.classList.toggle('open');
+  actualizarAccountMenu();
+}
+
+function actualizarAccountMenu() {
+  const menu = document.getElementById('accountMenu');
+  if (!menu) return;
+  if (usuarioActual) {
+    menu.innerHTML = `
+      <button class="account-menu-item" type="button" onclick="irAPerfil()">Ver perfil</button>
+      <button class="account-menu-item" type="button" onclick="cerrarSesion()">Cerrar sesión</button>
+    `;
+  } else {
+    menu.innerHTML = `
+      <button class="account-menu-item" type="button" onclick="abrirAuthModal('login')">Iniciar sesión</button>
+      <button class="account-menu-item" type="button" onclick="abrirAuthModal('register')">Crear cuenta</button>
+    `;
+  }
+}
+
+function actualizarCuentaUI() {
+  const accountName = document.querySelector('.account-name');
+  if (!accountName) return;
+  if (usuarioActual) {
+    accountName.textContent = usuarioActual.nombre ? `${usuarioActual.nombre} ${usuarioActual.apellido || ''}`.trim() : usuarioActual.email || 'Mi cuenta';
+  } else {
+    accountName.textContent = 'Mi cuenta';
+  }
+  actualizarAccountMenu();
+}
+
+function irAPerfil() {
+  cerrarAuthModal();
+  const perfil = document.getElementById('perfil');
+  if (perfil) {
+    perfil.style.display = 'block';
+    perfil.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  document.getElementById('accountMenu')?.classList.remove('open');
+}
+
+async function cargarSesion() {
+  try {
+    const res = await fetch('php/session.php');
+    const json = await res.json();
+    usuarioActual = json.loggedIn ? json.user : null;
+  } catch (_error) {
+    usuarioActual = null;
+  }
+  actualizarCuentaUI();
+  actualizarPerfilUI();
+}
+
+function actualizarPerfilUI() {
+  const perfil = document.getElementById('perfil');
+  if (!perfil) return;
+  if (!usuarioActual) {
+    perfil.style.display = 'none';
+    return;
+  }
+  perfil.style.display = 'block';
+  const fields = {
+    perfilNombre: usuarioActual.nombre || '',
+    perfilApellido: usuarioActual.apellido || '',
+    perfilEmail: usuarioActual.email || '',
+    perfilTelefono: usuarioActual.telefono || '',
+    perfilDireccion: usuarioActual.direccion || '',
+    perfilPais: usuarioActual.pais || '',
+    perfilProvincia: usuarioActual.provincia || '',
+    perfilDistrito: usuarioActual.distrito || '',
+    perfilDni: usuarioActual.dni || '',
+    perfilEdad: usuarioActual.edad || '',
+  };
+  Object.entries(fields).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
+  document.getElementById('perfilResumenNombre').textContent = usuarioActual.nombre ? `${usuarioActual.nombre} ${usuarioActual.apellido || ''}`.trim() : '—';
+  document.getElementById('perfilResumenEmail').textContent = usuarioActual.email || '—';
+  document.getElementById('perfilResumenTelefono').textContent = usuarioActual.telefono || '—';
+  document.getElementById('perfilResumenDireccion').textContent = usuarioActual.direccion || '—';
+}
+
+async function cerrarSesion() {
+  try {
+    const res = await fetch('php/logout.php', { method: 'POST' });
+    const json = await res.json();
+    if (json.success) {
+      usuarioActual = null;
+      actualizarCuentaUI();
+      actualizarPerfilUI();
+      mostrarToast('Sesión cerrada', 'exito');
+    }
+  } catch (_error) {
+    mostrarToast('Error cerrando sesión', 'error');
+  }
+}
+
 /* ============================================================
    TOAST
    ============================================================ */
@@ -783,6 +1071,32 @@ function mostrarToast(msg, tipo = '') {
   t.className   = `toast show ${tipo}`;
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => t.className = 'toast', 3400);
+}
+
+let _confirmCallback = null;
+function showConfirm(titulo, texto, confirmText = 'Confirmar', cancelText = 'Cancelar', callback = null) {
+  const modal = document.getElementById('confirmModal');
+  if (!modal) return;
+  document.getElementById('confirmTitulo').textContent = titulo;
+  document.getElementById('confirmTexto').textContent = texto;
+  const acceptBtn = modal.querySelector('.confirm-accept');
+  const cancelBtn = modal.querySelector('.btn-outline');
+  if (acceptBtn) acceptBtn.textContent = confirmText;
+  if (cancelBtn) cancelBtn.textContent = cancelText;
+  _confirmCallback = typeof callback === 'function' ? callback : null;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function cerrarConfirm() {
+  const modal = document.getElementById('confirmModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+  _confirmCallback = null;
+}
+function confirmarAccion() {
+  if (typeof _confirmCallback === 'function') _confirmCallback();
+  cerrarConfirm();
 }
 
 /* ============================================================
@@ -832,11 +1146,16 @@ function normalizarArray(val) {
   return String(val).split(',').map(v => v.trim()).filter(Boolean);
 }
 
+function getDistance(t1, t2) {
+  return Math.sqrt((t1.clientX - t2.clientX) ** 2 + (t1.clientY - t2.clientY) ** 2);
+}
+
 function iconoCategoria(cat = '') {
   const c = cat.toLowerCase();
-  if (c.includes('casaca')) return '🧥';
-  if (c.includes('blusa'))  return '👚';
-  if (c.includes('conjunto')) return '🩱';
-  if (c.includes('chompa')) return '🧣';
-  return '🌸';
+  // Edita aquí las rutas de las imágenes representativas para cada categoría
+  if (c.includes('casaca')) return 'img/imagen1.jpeg';
+  if (c.includes('blusa'))  return 'img/imagen11.jpeg';
+  if (c.includes('conjunto')) return 'img/imagen21.jpeg';
+  if (c.includes('chompa')) return 'img/imagen31.jpeg';
+  return 'img/imagen1.jpeg'; // Imagen por defecto
 }

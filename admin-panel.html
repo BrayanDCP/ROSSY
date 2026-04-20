@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Administrativo - R.O.S.S.Y</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/admin-styles.css" />
+</head>
+<body>
+
+  <!-- ==============================
+       HEADER ADMIN
+  ================================== -->
+  <header class="admin-header">
+    <div class="admin-header-inner">
+      <div class="admin-logo">
+        <span>✦</span>
+        <span>R.O.S.S.Y Admin</span>
+      </div>
+      <button class="btn btn-logout" onclick="handleAdminLogout()">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <!-- ==============================
+       CONTENEDOR PRINCIPAL
+  ================================== -->
+  <div class="admin-container">
+    
+    <!-- SIDEBAR / NAVEGACIÓN -->
+    <aside class="admin-sidebar">
+      <nav class="admin-nav">
+        <button class="admin-nav-item active" data-tab="usuarios" onclick="cambiarTab('usuarios')">
+          👥 Usuarios
+        </button>
+        <button class="admin-nav-item" data-tab="compras" onclick="cambiarTab('compras')">
+          🛒 Compras
+        </button>
+        <button class="admin-nav-item" data-tab="estadisticas" onclick="cambiarTab('estadisticas')">
+          📊 Estadísticas
+        </button>
+      </nav>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="admin-main">
+      
+      <!-- TAB: USUARIOS -->
+      <section id="tab-usuarios" class="admin-tab active">
+        <div class="tab-header">
+          <h2>Usuarios Registrados</h2>
+          <p class="tab-subtitle">Lista de clientes registrados en el sistema</p>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Compras</th>
+                <th>Registrado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usuariosTableBody">
+              <tr><td colspan="9" style="text-align:center;padding:2rem">Cargando usuarios...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB: COMPRAS -->
+      <section id="tab-compras" class="admin-tab">
+        <div class="tab-header">
+          <h2>Compras / Pedidos</h2>
+          <p class="tab-subtitle">Historial de todos los pedidos realizados</p>
+        </div>
+
+        <div class="filtros-compras">
+          <input type="text" id="filtroCompras" placeholder="🔍 Buscar por nombre, email o ID..." class="filtro-input">
+          <select id="filtroEstado" class="filtro-select">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="enviado">Enviado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID Pedido</th>
+                <th>Cliente</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Entrega</th>
+                <th>Pago</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="comprasTableBody">
+              <tr><td colspan="10" style="text-align:center;padding:2rem">Cargando compras...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB: ESTADÍSTICAS -->
+      <section id="tab-estadisticas" class="admin-tab">
+        <div class="tab-header">
+          <h2>Estadísticas</h2>
+          <p class="tab-subtitle">Resumen de datos del negocio</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+              <div class="stat-label">Total Usuarios</div>
+              <div class="stat-value" id="statUsuarios">0</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">🛒</div>
+            <div class="stat-content">
+              <div class="stat-label">Total Compras</div>
+              <div class="stat-value" id="statCompras">0</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-content">
+              <div class="stat-label">Ingresos Totales</div>
+              <div class="stat-value" id="statIngresos">S/ 0.00</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <div class="stat-label">Pedidos Confirmados</div>
+              <div class="stat-value" id="statConfirmados">0</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: DETALLES COMPRA -->
+  <div id="modalCompra" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="cerrarModalCompra()">×</button>
+      <h3>Detalles del Pedido</h3>
+      <div id="modalCompraBody" style="margin-top:1rem"></div>
+    </div>
+  </div>
+
+  <script src="js/admin-panel.js"></script>
+</body>
+</html>

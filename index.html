@@ -45,6 +45,11 @@
         <a href="#carrito" class="nav-link carrito-btn">
           🛒 <span id="carritoCount">0</span>
         </a>
+        <div class="account-bubble" id="accountBubble" onclick="toggleAccountMenu(event)">
+          <span class="account-icon">👤</span>
+          <span class="account-name"></span>
+          <div class="account-menu" id="accountMenu"></div>
+        </div>
       </nav>
     </div>
   </header>
@@ -68,6 +73,57 @@
       </div>
     </div>
     <div class="hero-scroll">↓</div>
+  </section>
+
+
+  <!-- ==============================
+       PERFIL DE CLIENTE
+  ================================== -->
+  <section id="perfil" class="section-perfil" style="display:none">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-pre">Mi perfil</span>
+        <h2 class="section-title">Datos de cuenta</h2>
+        <p class="section-sub">Completa tu información para pagos más rápidos y un proceso de compra ágil.</p>
+      </div>
+      <div class="perfil-panel">
+        <form id="perfilForm" class="form-auth">
+          <label>Nombre</label>
+          <input type="text" name="nombre" id="perfilNombre" placeholder="Tu nombre" required>
+          <label>Apellido</label>
+          <input type="text" name="apellido" id="perfilApellido" placeholder="Tu apellido" required>
+          <label>Correo electrónico</label>
+          <input type="email" name="email" id="perfilEmail" placeholder="tucorreo@ejemplo.com" readonly>
+          <label>DNI</label>
+          <input type="text" name="dni" id="perfilDni" placeholder="12345678">
+          <label>Edad</label>
+          <input type="number" name="edad" id="perfilEdad" min="13" placeholder="25">
+          <label>Teléfono</label>
+          <input type="text" name="telefono" id="perfilTelefono" placeholder="999 123 456">
+          <label>País</label>
+          <input type="text" name="pais" id="perfilPais" placeholder="Perú">
+          <label>Provincia</label>
+          <input type="text" name="provincia" id="perfilProvincia" placeholder="Lima">
+          <label>Distrito</label>
+          <input type="text" name="distrito" id="perfilDistrito" placeholder="San Isidro">
+          <label>Dirección</label>
+          <input type="text" name="direccion" id="perfilDireccion" placeholder="Av. Ejemplo 123, Lima">
+          <button type="submit" class="btn btn-primary">Guardar perfil</button>
+        </form>
+        <div class="perfil-snapshot">
+          <div class="perfil-card">
+            <span class="perfil-card-title">Resumen rápido</span>
+            <p class="perfil-card-text">Tus datos se usarán para completar el checkout más rápido y mejorar tu experiencia.</p>
+            <ul>
+              <li><strong id="perfilResumenNombre">Nombre:</strong></li>
+              <li><strong id="perfilResumenEmail">Email:</strong></li>
+              <li><strong id="perfilResumenTelefono">Teléfono:</strong></li>
+              <li><strong id="perfilResumenDireccion">Dirección:</strong></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ==============================
@@ -116,8 +172,12 @@
         <div class="carrito-lista" id="carritoLista">
           <div class="carrito-vacio">
             <span>🛍️</span>
-            <p>Tu carrito está vacío</p>
-            <a href="#tienda" class="btn btn-primary">Ver productos</a>
+            <p>Tu carrito aún no tiene productos</p>
+            <p class="carrito-vacio-texto">Visita la tienda y elige tu primera prenda. Toca cualquier producto para ver tallas y colores.</p>
+            <div class="carrito-vacio-acciones">
+              <button class="btn btn-primary" type="button" onclick="irATienda()">Ir a la tienda</button>
+              <a href="#ofertas" class="btn btn-outline">Ver ofertas</a>
+            </div>
           </div>
         </div>
 
@@ -164,25 +224,38 @@
       <div class="checkout-wrapper">
         <form id="formCheckout" class="checkout-form">
 
+          <div class="checkout-intro">
+            <p>Compra rápida y segura: revisa tu pedido, elige entrega y confirma por WhatsApp. Te ayudamos con seguimiento y atención personalizada.</p>
+          </div>
+
           <h3>Método de Pago</h3>
           <div class="pagos-grid">
             <label class="pago-card">
               <input type="radio" name="pago" value="Yape" checked>
               <span class="pago-icono">💜</span>
-              <span class="pago-nombre">Yape</span>
-              <span class="pago-detalle">965 484 265<br>Brayan Cho</span>
+              <div class="pago-texto">
+                <span class="pago-nombre">Yape</span>
+                <span class="pago-detalle">965 484 265 · Brayan Cho</span>
+              </div>
+              <span class="pago-choose">Seleccionar</span>
             </label>
             <label class="pago-card">
               <input type="radio" name="pago" value="Plin">
               <span class="pago-icono">💙</span>
-              <span class="pago-nombre">Plin</span>
-              <span class="pago-detalle">945 267 703<br>Carlos Sul</span>
+              <div class="pago-texto">
+                <span class="pago-nombre">Plin</span>
+                <span class="pago-detalle">945 267 703 · Carlos Sul</span>
+              </div>
+              <span class="pago-choose">Seleccionar</span>
             </label>
             <label class="pago-card">
               <input type="radio" name="pago" value="BCP">
               <span class="pago-icono">🏦</span>
-              <span class="pago-nombre">BCP</span>
-              <span class="pago-detalle">Cta: 19174644084062</span>
+              <div class="pago-texto">
+                <span class="pago-nombre">BCP</span>
+                <span class="pago-detalle">Cuenta bancaria 19174644084062</span>
+              </div>
+              <span class="pago-choose">Seleccionar</span>
             </label>
           </div>
 
@@ -210,6 +283,14 @@
             <div class="form-group">
               <label>Distrito *</label>
               <input type="text" id="chkDistrito" placeholder="San Isidro" />
+            </div>
+            <div class="form-group">
+              <label>País *</label>
+              <input type="text" id="chkPais" placeholder="Perú" />
+            </div>
+            <div class="form-group">
+              <label>Provincia *</label>
+              <input type="text" id="chkProvincia" placeholder="Lima" />
             </div>
           </div>
 
@@ -244,6 +325,7 @@
             <span>Total</span>
             <span id="checkoutTotal">S/ 0.00</span>
           </div>
+          <p class="checkout-note">Pago seguro por WhatsApp y atención personalizada. Revisa tu pedido antes de confirmar.</p>
         </div>
       </div>
     </div>
@@ -478,6 +560,79 @@
        TOAST NOTIFICACIONES
   ================================== -->
   <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- ==============================
+       MODAL AUTH / LOGIN
+  ================================== -->
+  <div id="authModal" class="modal-overlay auth-modal" style="display:none" onclick="if (event.target === this) closeAuthModal();">
+    <div class="auth-modal-box">
+      <button type="button" class="modal-close" onclick="closeAuthModal()">✕</button>
+      <div class="auth-panel auth-modal-panel">
+        <div class="section-header" style="text-align:left;margin-bottom:1.5rem">
+          <span class="section-pre">Tu cuenta</span>
+          <h2 class="section-title">Iniciar sesión o registrarse</h2>
+          <p class="section-sub">Accede rápidamente y guarda tus datos para compras más ágiles.</p>
+        </div>
+        <div class="auth-tabs">
+          <button type="button" class="tab-btn active" data-tab="login">Iniciar sesión</button>
+          <button type="button" class="tab-btn" data-tab="register">Registrarse</button>
+        </div>
+        <div class="auth-forms">
+          <form id="loginForm" class="form-auth" action="php/login.php" method="post">
+            <label>Correo electrónico</label>
+            <input type="email" name="email" placeholder="tucorreo@ejemplo.com" required>
+            <label>Contraseña</label>
+            <input type="password" name="password" placeholder="Contraseña" required>
+            <button type="submit" class="btn btn-primary">Entrar</button>
+          </form>
+
+          <form id="registerForm" class="form-auth hidden" action="php/register.php" method="post">
+            <label>Nombre</label>
+            <input type="text" name="nombre" placeholder="Tu nombre" required>
+            <label>Apellido</label>
+            <input type="text" name="apellido" placeholder="Tu apellido" required>
+            <label>Correo electrónico</label>
+            <input type="email" name="email" placeholder="tucorreo@ejemplo.com" required>
+            <label>DNI</label>
+            <input type="text" name="dni" placeholder="12345678" required>
+            <label>Edad</label>
+            <input type="number" name="edad" min="13" placeholder="25" required>
+            <label>País</label>
+            <input type="text" name="pais" placeholder="Perú" required>
+            <label>Provincia</label>
+            <input type="text" name="provincia" placeholder="Lima" required>
+            <label>Distrito</label>
+            <input type="text" name="distrito" placeholder="San Isidro" required>
+            <label>Dirección</label>
+            <input type="text" name="direccion" placeholder="Av. Ejemplo 123" required>
+            <label>Teléfono (opcional)</label>
+            <input type="text" name="telefono" placeholder="999 123 456">
+            <label>Contraseña</label>
+            <input type="password" name="password" placeholder="Crea una contraseña" required>
+            <button type="submit" class="btn btn-primary">Crear cuenta</button>
+          </form>
+        </div>
+        <div id="authFeedback" class="auth-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================
+       MODAL CONFIRMACIÓN
+  ================================== -->
+  <div id="confirmModal" class="modal-confirm-overlay" style="display:none" onclick="if(event.target===this) cerrarConfirm();">
+    <div class="modal-confirm-box">
+      <div class="confirm-header">
+        <strong id="confirmTitulo">¿Confirmar acción?</strong>
+        <button class="confirm-close" type="button" onclick="cerrarConfirm()">✕</button>
+      </div>
+      <p id="confirmTexto">Selecciona una opción para continuar.</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-outline" onclick="cerrarConfirm()">Cancelar</button>
+        <button type="button" class="btn btn-primary confirm-accept" onclick="confirmarAccion()">Aceptar</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ==============================
        MODAL PRODUCTO (galería + selección)

@@ -1,135 +1,43 @@
 <?php
-/* ============================================
-   php/productos.php
-   CRUD de productos – API REST simple
-   GET    → listar productos (con filtros opcionales)
-   POST   → crear producto  (admin)
-   PUT    → actualizar      (admin)
-   DELETE → eliminar        (admin)
-   ============================================ */
-
-require_once 'conexion.php';
-
+declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+require_once __DIR__ . '/conexion.php';
 
-// Preflight CORS
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
-
-$pdo    = obtenerConexion();
-$metodo = $_SERVER['REQUEST_METHOD'];
-
-/* ============ GET – Listar productos ============ */
-if ($metodo === 'GET') {
-    $sql    = "SELECT * FROM productos WHERE 1=1";
-    $params = [];
-
-    // Filtro por categoría
-    if (!empty($_GET['categoria'])) {
-        $sql     .= " AND categoria = :categoria";
-        $params[':categoria'] = sanitizar($_GET['categoria']);
+try {
+    $pdo = obtenerConexion();
+    if (!$pdo) {
+        echo json_encode([]);
+        exit;
     }
-
-    // Filtro por búsqueda
-    if (!empty($_GET['q'])) {
-        $busqueda = '%' . sanitizar($_GET['q']) . '%';
-        $sql     .= " AND (nombre LIKE :q OR color LIKE :q2)";
-        $params[':q']  = $busqueda;
-        $params[':q2'] = $busqueda;
+    $sql = 'SELECT p.id, p.sku, p.nombre, p.descripcion, c.nombre AS categoria, p.precio, p.precio_original, p.stock, p.imagen_principal, p.activo, GROUP_CONCAT(pi.ruta ORDER BY pi.orden SEPARATOR ";") AS imagenes
+            FROM productos p
+            LEFT JOIN categorias c ON c.id = p.categoria_id
+            LEFT JOIN producto_imagenes pi ON pi.producto_id = p.id
+            WHERE p.activo = 1
+            GROUP BY p.id
+            ORDER BY p.id ASC';
+    $stmt = $pdo->query($sql);
+    $productos = [];
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $imagenes = [];
+        if (!empty($row['imagenes'])) {
+            $imagenes = array_filter(explode(';', $row['imagenes']));
+        }
+        $productos[] = [
+            'id' => (int) $row['id'],
+            'sku' => $row['sku'],
+            'nombre' => $row['nombre'],
+            'descripcion' => $row['descripcion'],
+            'categoria' => $row['categoria'] ?? '',
+            'precio' => $row['precio'],
+            'precio_original' => $row['precio_original'],
+            'stock' => (int) $row['stock'],
+            'imagen_principal' => $row['imagen_principal'],
+            'imagenes' => $imagenes,
+            'activo' => (int) $row['activo'],
+        ];
     }
-
-    // Solo ofertas
-    if (!empty($_GET['oferta'])) {
-        $sql .= " AND precio_original IS NOT NULL AND precio_original > 0";
-    }
-
-    $sql .= " ORDER BY id DESC";
-
-    // Límite
-    if (!empty($_GET['limite']) && is_numeric($_GET['limite'])) {
-        $sql .= " LIMIT " . (int)$_GET['limite'];
-    }
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $productos = $stmt->fetchAll();
-
-    responderJSON($productos);
-}
-
-/* ============ POST – Crear producto (admin) ============ */
-if ($metodo === 'POST') {
-    $entrada = json_decode(file_get_contents('php://input'), true);
-
-    // Validación básica
-    if (empty($entrada['nombre']) || empty($entrada['precio'])) {
-        responderJSON(['error' => 'Nombre y precio son obligatorios'], 400);
-    }
-
-    $stmt = $pdo->prepare("
-        INSERT INTO productos (nombre, precio, precio_original, imagen, talla, color, categoria, badge)
-        VALUES (:nombre, :precio, :precio_original, :imagen, :talla, :color, :categoria, :badge)
-    ");
-
-    $stmt->execute([
-        ':nombre'          => sanitizar($entrada['nombre']),
-        ':precio'          => (float)$entrada['precio'],
-        ':precio_original' => !empty($entrada['precio_original']) ? (float)$entrada['precio_original'] : null,
-        ':imagen'          => sanitizar($entrada['imagen'] ?? ''),
-        ':talla'           => sanitizar($entrada['talla'] ?? ''),
-        ':color'           => sanitizar($entrada['color'] ?? ''),
-        ':categoria'       => sanitizar($entrada['categoria'] ?? 'general'),
-        ':badge'           => sanitizar($entrada['badge'] ?? ''),
-    ]);
-
-    responderJSON(['ok' => true, 'id' => $pdo->lastInsertId()], 201);
-}
-
-/* ============ PUT – Actualizar producto ============ */
-if ($metodo === 'PUT') {
-    $entrada = json_decode(file_get_contents('php://input'), true);
-
-    if (empty($entrada['id'])) {
-        responderJSON(['error' => 'ID requerido'], 400);
-    }
-
-    $stmt = $pdo->prepare("
-        UPDATE productos SET
-            nombre          = :nombre,
-            precio          = :precio,
-            precio_original = :precio_original,
-            imagen          = :imagen,
-            talla           = :talla,
-            color           = :color,
-            categoria       = :categoria,
-            badge           = :badge
-        WHERE id = :id
-    ");
-
-    $stmt->execute([
-        ':id'              => (int)$entrada['id'],
-        ':nombre'          => sanitizar($entrada['nombre']),
-        ':precio'          => (float)$entrada['precio'],
-        ':precio_original' => !empty($entrada['precio_original']) ? (float)$entrada['precio_original'] : null,
-        ':imagen'          => sanitizar($entrada['imagen'] ?? ''),
-        ':talla'           => sanitizar($entrada['talla'] ?? ''),
-        ':color'           => sanitizar($entrada['color'] ?? ''),
-        ':categoria'       => sanitizar($entrada['categoria'] ?? 'general'),
-        ':badge'           => sanitizar($entrada['badge'] ?? ''),
-    ]);
-
-    responderJSON(['ok' => true]);
-}
-
-/* ============ DELETE – Eliminar producto ============ */
-if ($metodo === 'DELETE') {
-    $id = (int)($_GET['id'] ?? 0);
-    if (!$id) responderJSON(['error' => 'ID requerido'], 400);
-
-    $stmt = $pdo->prepare("DELETE FROM productos WHERE id = :id");
-    $stmt->execute([':id' => $id]);
-
-    responderJSON(['ok' => true]);
+    echo json_encode($productos, JSON_UNESCAPED_UNICODE);
+} catch (PDOException $e) {
+    echo json_encode([]);
 }
