@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
   actualizarCarritoUI();
   iniciarFiltros();
   iniciarFormularios();
-  iniciarAuthForms();
   iniciarScrollAnimaciones();
   iniciarNavLinks();
 });
@@ -142,6 +141,13 @@ async function cargarProductos() {
 }
 
 function obtenerProductosDemo() {
+  const preciosDemo = [
+    35.90, 35.90, 35.90, 35.90, 35.90, 119.90, 179.90, 154.90, 139.90, 149.90,
+    99.90, 109.90, 124.90, 114.90, 129.90, 139.90, 149.90, 132.90, 142.90, 119.90,
+    179.90, 159.90, 169.90, 149.90, 139.90, 129.90, 124.90, 134.90, 144.90, 154.90,
+    129.90, 119.90, 139.90, 149.90, 169.90, 159.90, 179.90, 189.90, 199.90
+  ];
+
   const productos = [];
   for (let i = 1; i <= 39; i++) {
     let categoria;
@@ -153,7 +159,7 @@ function obtenerProductosDemo() {
     productos.push({
       id: i,
       nombre: `Prenda ${i}`,
-      precio: 0,
+      precio: preciosDemo[i - 1],
       precio_original: '',
       imagenes: [`imagen${i}.jpeg`],
       tallas: ['S', 'M', 'L', 'XL'],
