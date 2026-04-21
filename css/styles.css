@@ -1699,3 +1699,206 @@ textarea { resize: vertical; }
   .modal-producto-box { border-radius: var(--radio); }
   .galeria-thumbs { display: none; }
 }
+/* ============================================
+   MEJORAS R.O.S.S.Y – Estilos adicionales
+   Inspirado en Saga Falabella: limpio, moderno
+   y con mejor UX de colores y tarjetas
+   ============================================ */
+
+/* ---- Puntos de color en las cards ---- */
+.colores-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.color-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  transition: transform 0.18s ease;
+}
+.color-dot:hover { transform: scale(1.25); }
+
+/* ---- Fila precio + descuento en card ---- */
+.producto-precio-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.descuento-badge {
+  background: var(--marsala);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Hover overlay en card (estilo Falabella) ---- */
+.producto-img-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.card-hover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(102, 56, 53, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  border-radius: 8px 8px 0 0;
+}
+.producto-card:hover .card-hover-overlay { opacity: 1; }
+.btn-hover-ver {
+  background: #fff;
+  color: var(--marsala);
+  border: none;
+  padding: 0.55rem 1.3rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transform: translateY(6px);
+  transition: transform 0.25s ease;
+}
+.producto-card:hover .btn-hover-ver { transform: translateY(0); }
+.btn-wa-card {
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Selector de color mejorado (sin guión) ---- */
+
+/* Contenedor de colores en el modal: cuadrícula ordenada */
+#selectorColores {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: flex-start !important;
+}
+
+.opcion-color-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  background: #fff;
+  border: 2px solid #e8dedd;
+  border-radius: 8px;
+  padding: 6px 10px 6px 7px;
+  cursor: pointer;
+  transition: var(--transicion);
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.opcion-color-btn:hover {
+  border-color: var(--dusty-rose);
+  box-shadow: 0 2px 8px rgba(102,56,53,0.12);
+}
+.opcion-color-btn.selected {
+  border-color: var(--marsala);
+  background: var(--ivory);
+}
+.color-swatch {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  flex-shrink: 0;
+}
+.color-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gris-texto);
+  line-height: 1;
+}
+.opcion-color-btn.selected .color-label { color: var(--marsala); font-weight: 600; }
+
+/* ---- Color dot en carrito ---- */
+.item-color-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+.item-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* ---- Descuento en modal ---- */
+.modal-descuento {
+  background: var(--marsala);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 5px;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+/* ---- Mapa en contacto ---- */
+#mapaContacto { margin-top: 1.5rem; }
+.mapa-wrapper {
+  background: #fff;
+  border-radius: var(--radio-lg);
+  padding: 1.25rem;
+  box-shadow: var(--sombra);
+}
+.mapa-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.mapa-icono { font-size: 1.5rem; }
+.mapa-header strong {
+  display: block;
+  color: var(--marsala);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.mapa-header p {
+  font-size: 0.82rem;
+  color: var(--gris-texto);
+  margin: 0;
+}
+.mapa-frame-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  line-height: 0;
+}
+.mapa-link { font-size: 0.82rem !important; padding: 0.45rem 1rem !important; }
+
+/* ---- Tallas meta en card más limpia ---- */
+.tallas-meta {
+  font-size: 0.78rem;
+  color: var(--gris-texto);
+}
+.producto-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
