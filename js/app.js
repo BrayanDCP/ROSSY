@@ -141,25 +141,17 @@ async function cargarProductos() {
 }
 
 function obtenerProductosDemo() {
-  const preciosDemo = [
-    35.90, 35.90, 35.90, 35.90, 35.90, 119.90, 179.90, 154.90, 139.90, 149.90,
-    99.90, 109.90, 124.90, 114.90, 129.90, 139.90, 149.90, 132.90, 142.90, 119.90,
-    179.90, 159.90, 169.90, 149.90, 139.90, 129.90, 124.90, 134.90, 144.90, 154.90,
-    129.90, 119.90, 139.90, 149.90, 169.90, 159.90, 179.90, 189.90, 199.90
-  ];
-
   const productos = [];
-  for (let i = 1; i <= 39; i++) {
+  for (let i = 1; i <= 38; i++) {
     let categoria;
     if (i <= 10) categoria = 'Casaca Jean';
     else if (i <= 20) categoria = 'blusas';
     else if (i <= 30) categoria = 'conjuntos';
     else categoria = 'Chompa';
-
     productos.push({
       id: i,
       nombre: `Prenda ${i}`,
-      precio: preciosDemo[i - 1],
+      precio: '89.90',
       precio_original: '',
       imagenes: [`imagen${i}.jpeg`],
       tallas: ['S', 'M', 'L', 'XL'],
@@ -349,80 +341,6 @@ function actualizarGaleria() {
   // Reset zoom and pan on image change
   imgPrincipal.classList.remove('zoomed');
   imgPrincipal.style.transform = 'scale(1) translate(0, 0)';
-  let scale = 1;
-  let translateX = 0;
-  let translateY = 0;
-  let isDragging = false;
-  let startX, startY;
-
-  const updateTransform = () => {
-    imgPrincipal.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
-  };
-
-  // Mouse wheel zoom
-  imgPrincipal.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    scale = Math.max(1, Math.min(5, scale + delta));
-    updateTransform();
-  });
-
-  // Touch zoom (pinch)
-  let initialDistance = 0;
-  let initialScale = 1;
-  imgPrincipal.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 2) {
-      initialDistance = getDistance(e.touches[0], e.touches[1]);
-      initialScale = scale;
-    } else if (e.touches.length === 1 && scale > 1) {
-      // Start pan
-      isDragging = true;
-      startX = e.touches[0].clientX - translateX;
-      startY = e.touches[0].clientY - translateY;
-    }
-  });
-  imgPrincipal.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      const currentDistance = getDistance(e.touches[0], e.touches[1]);
-      scale = initialScale * (currentDistance / initialDistance);
-      scale = Math.max(1, Math.min(5, scale));
-      updateTransform();
-    } else if (e.touches.length === 1 && isDragging) {
-      translateX = e.touches[0].clientX - startX;
-      translateY = e.touches[0].clientY - startY;
-      const maxPan = 150 * scale; // Scale pan limit with zoom
-      translateX = Math.max(-maxPan, Math.min(maxPan, translateX));
-      translateY = Math.max(-maxPan, Math.min(maxPan, translateY));
-      updateTransform();
-    }
-  });
-  imgPrincipal.addEventListener('touchend', () => {
-    isDragging = false;
-  });
-
-  // Mouse pan
-  imgPrincipal.addEventListener('mousedown', (e) => {
-    if (scale > 1) {
-      isDragging = true;
-      startX = e.clientX - translateX;
-      startY = e.clientY - translateY;
-      e.preventDefault();
-    }
-  });
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      translateX = e.clientX - startX;
-      translateY = e.clientY - startY;
-      const maxPan = 150 * scale;
-      translateX = Math.max(-maxPan, Math.min(maxPan, translateX));
-      translateY = Math.max(-maxPan, Math.min(maxPan, translateY));
-      updateTransform();
-    }
-  });
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
 
   // Imagen principal
   if (modalImagenes.length > 0) {
@@ -432,11 +350,37 @@ function actualizarGaleria() {
     imgPrincipal.style.display = 'block';
     placeholder.style.display  = 'none';
     imgPrincipal.onclick = () => {
-      // Reset zoom and pan on click
-      scale = 1;
-      translateX = 0;
-      translateY = 0;
-      updateTransform();
+      const isZoomed = imgPrincipal.classList.toggle('zoomed');
+      if (isZoomed) {
+        // Add pan functionality
+        let isDragging = false;
+        let startX, startY, translateX = 0, translateY = 0;
+        imgPrincipal.onmousedown = (e) => {
+          isDragging = true;
+          startX = e.clientX - translateX;
+          startY = e.clientY - translateY;
+          e.preventDefault();
+        };
+        document.onmousemove = (e) => {
+          if (!isDragging) return;
+          translateX = e.clientX - startX;
+          translateY = e.clientY - startY;
+          // Limit pan to reasonable bounds
+          const maxPan = 150;
+          translateX = Math.max(-maxPan, Math.min(maxPan, translateX));
+          translateY = Math.max(-maxPan, Math.min(maxPan, translateY));
+          imgPrincipal.style.transform = `scale(1.5) translate(${translateX}px, ${translateY}px)`;
+        };
+        document.onmouseup = () => {
+          isDragging = false;
+        };
+      } else {
+        imgPrincipal.style.transform = 'scale(1) translate(0, 0)';
+        // Remove pan listeners
+        imgPrincipal.onmousedown = null;
+        document.onmousemove = null;
+        document.onmouseup = null;
+      }
     };
     imgPrincipal.onerror = () => {
       imgPrincipal.style.display = 'none';
@@ -755,12 +699,6 @@ function ocultarCheckout() {
   document.getElementById('carrito')?.scrollIntoView({ behavior: 'smooth' });
 }
 
-function irATienda() {
-  const sec = document.getElementById('tienda');
-  if (!sec) return;
-  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
 function mostrarEnvio() {
   document.getElementById('envioBox').style.display  = 'block';
   document.getElementById('retiroBox').style.display = 'none';
@@ -906,8 +844,13 @@ function normalizarArray(val) {
   return String(val).split(',').map(v => v.trim()).filter(Boolean);
 }
 
-function getDistance(t1, t2) {
-  return Math.sqrt((t1.clientX - t2.clientX) ** 2 + (t1.clientY - t2.clientY) ** 2);
+function irATienda() {
+  const tienda = document.getElementById('tienda');
+  if (tienda) tienda.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+  const btnTodos = document.querySelector('.filtro-btn[data-filtro="todos"]');
+  if (btnTodos) btnTodos.classList.add('active');
+  if (productosTodos.length) renderizarProductos(productosTodos);
 }
 
 function iconoCategoria(cat = '') {
