@@ -17,7 +17,6 @@ let modalImagenes       = [];
 let modalImgIndex       = 0;
 let modalTallaSeleccionada = '';
 let modalColorSeleccionado = '';
-let usuarioActual = null;
 
 const WA_NUMERO = '51993304046';
 
@@ -64,20 +63,13 @@ function getColorCSS(nombre) {
 document.addEventListener('DOMContentLoaded', () => {
   iniciarHeader();
   iniciarMenuMobile();
-  renderizarProductos(obtenerProductosDemo());
   cargarProductos();
   actualizarCarritoUI();
   iniciarFiltros();
   iniciarFormularios();
   iniciarAuthForms();
-  cargarSesion();
   iniciarScrollAnimaciones();
   iniciarNavLinks();
-  iniciarAnimacionesInteractivas();
-  document.body.classList.add('loaded');
-  document.addEventListener('click', () => {
-    document.getElementById('accountMenu')?.classList.remove('open');
-  });
 });
 
 /* ============================================================
@@ -133,15 +125,6 @@ function iniciarNavLinks() {
   secciones.forEach(s => obs.observe(s));
 }
 
-function iniciarAnimacionesInteractivas() {
-  document.body.addEventListener('click', event => {
-    const boton = event.target.closest('button, .btn, .nav-link, .filtro-btn');
-    if (!boton) return;
-    boton.classList.add('btn-press');
-    setTimeout(() => boton.classList.remove('btn-press'), 220);
-  });
-}
-
 /* ============================================================
    CARGAR PRODUCTOS
    ============================================================ */
@@ -160,7 +143,6 @@ async function cargarProductos() {
 
 function obtenerProductosDemo() {
   const productos = [];
-  const precios = [25, 30, 35, 39, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130, 140, 150];
   for (let i = 1; i <= 39; i++) {
     let categoria;
     if (i <= 10) categoria = 'Casaca Jean';
@@ -168,19 +150,16 @@ function obtenerProductosDemo() {
     else if (i <= 30) categoria = 'conjuntos';
     else categoria = 'Chompa';
 
-    const precio = precios[(i - 1) % precios.length];
-    const precioOriginal = Math.random() > 0.65 ? precio + 20 : '';
-
     productos.push({
       id: i,
       nombre: `Prenda ${i}`,
-      precio: precio,
-      precio_original: precioOriginal,
+      precio: 0,
+      precio_original: '',
       imagenes: [`imagen${i}.jpeg`],
       tallas: ['S', 'M', 'L', 'XL'],
       colores: ['Rosa', 'Blanco', 'Negro'],
       categoria: categoria,
-      badge: precioOriginal ? 'oferta' : (i % 5 === 0 ? 'nuevo' : ''),
+      badge: '',
       descripcion: `Descripción de la prenda ${i}.`
     });
   }
@@ -230,7 +209,7 @@ function renderizarProductos(lista) {
         </div>
         <p class="producto-precio">${original}S/ ${fmtPrecio(p.precio)}</p>
         <div class="producto-btns">
-          <button type="button" class="btn btn-primary" onclick="abrirModalProductoBtn(event, ${p.id})">
+          <button class="btn btn-primary" onclick="event.stopPropagation();abrirModalProducto(${p.id})">
             Ver producto
           </button>
           <button class="btn btn-outline" onclick="event.stopPropagation();comprarWhatsApp(${p.id})" title="Comprar por WhatsApp">
@@ -262,11 +241,6 @@ function iniciarFiltros() {
 /* ============================================================
    MODAL PRODUCTO – galería + selección de talla y color
    ============================================================ */
-function abrirModalProductoBtn(e, id) {
-  if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-  abrirModalProducto(id);
-}
-
 function abrirModalProducto(id) {
   const p = productosTodos.find(x => x.id === id);
   if (!p) return;
@@ -731,8 +705,6 @@ function generarMensajeCarrito(extras = {}) {
     msg += `\n🚚 *Entrega:* Envío a domicilio`;
     if (extras.direccion) msg += ` – ${extras.direccion}`;
     if (extras.distrito)  msg += `, ${extras.distrito}`;
-    if (extras.provincia) msg += `, ${extras.provincia}`;
-    if (extras.pais)      msg += `, ${extras.pais}`;
   } else if (extras.entrega === 'retiro') {
     msg += `\n🏪 *Entrega:* Recojo en tienda (C.C. Apecosur, Interior 1121)`;
   }
@@ -756,15 +728,6 @@ function mostrarCheckout() {
   if (!sec) return;
   sec.style.display = 'block';
 
-  if (usuarioActual) {
-    document.getElementById('chkNombre').value = usuarioActual.nombre || '';
-    document.getElementById('chkTelefono').value = usuarioActual.telefono || '';
-    document.getElementById('chkDireccion').value = usuarioActual.direccion || '';
-    document.getElementById('chkDistrito').value = usuarioActual.distrito || '';
-    document.getElementById('chkPais').value = usuarioActual.pais || '';
-    document.getElementById('chkProvincia').value = usuarioActual.provincia || '';
-  }
-
   // Rellenar panel lateral
   const det   = document.getElementById('checkoutDetalle');
   const totEl = document.getElementById('checkoutTotal');
@@ -777,9 +740,6 @@ function mostrarCheckout() {
   }
   if (totEl) totEl.textContent = `S/ ${fmtPrecio(calcularTotal())}`;
 
-  sec.classList.remove('anim-fade-in');
-  void sec.offsetWidth;
-  sec.classList.add('anim-fade-in');
   sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -820,8 +780,6 @@ function iniciarFormularios() {
     const telefono  = document.getElementById('chkTelefono')?.value.trim()  || '';
     const direccion = document.getElementById('chkDireccion')?.value.trim() || '';
     const distrito  = document.getElementById('chkDistrito')?.value.trim()  || '';
-    const pais      = document.getElementById('chkPais')?.value.trim()      || '';
-    const provincia = document.getElementById('chkProvincia')?.value.trim() || '';
     const pago      = document.querySelector('input[name="pago"]:checked')?.value || 'Yape';
     const nota      = document.getElementById('chkNota')?.value.trim()      || '';
 
@@ -829,43 +787,17 @@ function iniciarFormularios() {
       mostrarToast('⚠️ Completa tu nombre y teléfono', 'error');
       return;
     }
-    if (tipoEntrega === 'envio') {
-      if (!direccion || !distrito || !pais || !provincia) {
-        mostrarToast('⚠️ Completa todos los datos de envío', 'error');
-        return;
-      }
+    if (tipoEntrega === 'envio' && !direccion) {
+      mostrarToast('⚠️ Ingresa tu dirección de entrega', 'error');
+      return;
     }
 
-    const extras = { nombre, telefono, direccion, distrito, pais, provincia, pago, nota, entrega: tipoEntrega };
+    const extras = { nombre, telefono, direccion, distrito, pago, nota, entrega: tipoEntrega };
     const msg    = generarMensajeCarrito(extras);
     window.open(`https://wa.me/${WA_NUMERO}?text=${encodeURIComponent(msg)}`, '_blank');
 
     mostrarToast('✅ ¡Pedido enviado! Redirigiendo a WhatsApp...', 'exito');
     setTimeout(() => { limpiarCarrito(); ocultarCheckout(); }, 1800);
-  });
-
-  document.getElementById('perfilForm')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    if (!usuarioActual) {
-      abrirAuthModal('login');
-      return;
-    }
-
-    const data = new FormData(document.getElementById('perfilForm'));
-    try {
-      const res = await fetch('php/profile.php', { method: 'POST', body: data });
-      const json = await res.json();
-      if (json.success) {
-        mostrarToast(json.message || 'Perfil actualizado', 'exito');
-        usuarioActual = json.user || usuarioActual;
-        actualizarPerfilUI();
-        actualizarCuentaUI();
-      } else {
-        mostrarToast(json.error || 'No se pudo guardar el perfil', 'error');
-      }
-    } catch (error) {
-      mostrarToast('Error de conexión al guardar perfil', 'error');
-    }
   });
 
   /* ---- Contacto ---- */
@@ -880,184 +812,6 @@ function iniciarFormularios() {
     e.target.reset();
     mostrarToast('✅ ¡Abriendo WhatsApp!', 'exito');
   });
-}
-
-function iniciarAuthForms() {
-  const authFeedback = document.getElementById('authFeedback');
-  const loginForm = document.getElementById('loginForm');
-  const registerForm = document.getElementById('registerForm');
-  const tabs = document.querySelectorAll('.tab-btn');
-
-  const toggleTab = tab => {
-    tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
-    if (loginForm) loginForm.classList.toggle('hidden', tab !== 'login');
-    if (registerForm) registerForm.classList.toggle('hidden', tab !== 'register');
-    if (authFeedback) authFeedback.textContent = '';
-  };
-
-  tabs.forEach(btn => btn.addEventListener('click', () => toggleTab(btn.dataset.tab)));
-  toggleTab('login');
-
-  const submitForm = async form => {
-    if (!form) return;
-    const action = form.action;
-    const data = new FormData(form);
-    try {
-      const res = await fetch(action, { method: 'POST', body: data });
-      const json = await res.json();
-      if (json.success) {
-        mostrarToast(json.message || 'Operación exitosa', 'exito');
-        if (authFeedback) authFeedback.textContent = json.message || 'Operación exitosa';
-        await cargarSesion();
-        if (json.success) {
-          cerrarAuthModal();
-        }
-        if (form === registerForm) {
-          toggleTab('login');
-          form.reset();
-        }
-      } else {
-        mostrarToast(json.error || 'Error al procesar', 'error');
-        if (authFeedback) authFeedback.textContent = json.error || 'Error al procesar';
-      }
-    } catch (error) {
-      mostrarToast('Error de conexión con el servidor', 'error');
-      if (authFeedback) authFeedback.textContent = 'Error de conexión con el servidor';
-    }
-  };
-
-  loginForm?.addEventListener('submit', e => {
-    e.preventDefault();
-    submitForm(loginForm);
-  });
-
-  registerForm?.addEventListener('submit', e => {
-    e.preventDefault();
-    submitForm(registerForm);
-  });
-}
-
-function abrirAuthModal(tab = 'login') {
-  const modal = document.getElementById('authModal');
-  if (!modal) return;
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  const tabs = document.querySelectorAll('.tab-btn');
-  const loginForm = document.getElementById('loginForm');
-  const registerForm = document.getElementById('registerForm');
-  tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
-  if (loginForm) loginForm.classList.toggle('hidden', tab !== 'login');
-  if (registerForm) registerForm.classList.toggle('hidden', tab !== 'register');
-  document.getElementById('authFeedback').textContent = '';
-}
-
-function cerrarAuthModal() {
-  const modal = document.getElementById('authModal');
-  if (!modal) return;
-  modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function toggleAccountMenu(event) {
-  event.stopPropagation();
-  const menu = document.getElementById('accountMenu');
-  if (!menu) return;
-  menu.classList.toggle('open');
-  actualizarAccountMenu();
-}
-
-function actualizarAccountMenu() {
-  const menu = document.getElementById('accountMenu');
-  if (!menu) return;
-  if (usuarioActual) {
-    menu.innerHTML = `
-      <button class="account-menu-item" type="button" onclick="irAPerfil()">Ver perfil</button>
-      <button class="account-menu-item" type="button" onclick="cerrarSesion()">Cerrar sesión</button>
-    `;
-  } else {
-    menu.innerHTML = `
-      <button class="account-menu-item" type="button" onclick="abrirAuthModal('login')">Iniciar sesión</button>
-      <button class="account-menu-item" type="button" onclick="abrirAuthModal('register')">Crear cuenta</button>
-    `;
-  }
-}
-
-function actualizarCuentaUI() {
-  const accountName = document.querySelector('.account-name');
-  if (!accountName) return;
-  if (usuarioActual) {
-    accountName.textContent = usuarioActual.nombre ? `${usuarioActual.nombre} ${usuarioActual.apellido || ''}`.trim() : usuarioActual.email || 'Mi cuenta';
-  } else {
-    accountName.textContent = 'Mi cuenta';
-  }
-  actualizarAccountMenu();
-}
-
-function irAPerfil() {
-  cerrarAuthModal();
-  const perfil = document.getElementById('perfil');
-  if (perfil) {
-    perfil.style.display = 'block';
-    perfil.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-  document.getElementById('accountMenu')?.classList.remove('open');
-}
-
-async function cargarSesion() {
-  try {
-    const res = await fetch('php/session.php');
-    const json = await res.json();
-    usuarioActual = json.loggedIn ? json.user : null;
-  } catch (_error) {
-    usuarioActual = null;
-  }
-  actualizarCuentaUI();
-  actualizarPerfilUI();
-}
-
-function actualizarPerfilUI() {
-  const perfil = document.getElementById('perfil');
-  if (!perfil) return;
-  if (!usuarioActual) {
-    perfil.style.display = 'none';
-    return;
-  }
-  perfil.style.display = 'block';
-  const fields = {
-    perfilNombre: usuarioActual.nombre || '',
-    perfilApellido: usuarioActual.apellido || '',
-    perfilEmail: usuarioActual.email || '',
-    perfilTelefono: usuarioActual.telefono || '',
-    perfilDireccion: usuarioActual.direccion || '',
-    perfilPais: usuarioActual.pais || '',
-    perfilProvincia: usuarioActual.provincia || '',
-    perfilDistrito: usuarioActual.distrito || '',
-    perfilDni: usuarioActual.dni || '',
-    perfilEdad: usuarioActual.edad || '',
-  };
-  Object.entries(fields).forEach(([id, value]) => {
-    const el = document.getElementById(id);
-    if (el) el.value = value;
-  });
-  document.getElementById('perfilResumenNombre').textContent = usuarioActual.nombre ? `${usuarioActual.nombre} ${usuarioActual.apellido || ''}`.trim() : '—';
-  document.getElementById('perfilResumenEmail').textContent = usuarioActual.email || '—';
-  document.getElementById('perfilResumenTelefono').textContent = usuarioActual.telefono || '—';
-  document.getElementById('perfilResumenDireccion').textContent = usuarioActual.direccion || '—';
-}
-
-async function cerrarSesion() {
-  try {
-    const res = await fetch('php/logout.php', { method: 'POST' });
-    const json = await res.json();
-    if (json.success) {
-      usuarioActual = null;
-      actualizarCuentaUI();
-      actualizarPerfilUI();
-      mostrarToast('Sesión cerrada', 'exito');
-    }
-  } catch (_error) {
-    mostrarToast('Error cerrando sesión', 'error');
-  }
 }
 
 /* ============================================================
