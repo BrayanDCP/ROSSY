@@ -338,10 +338,6 @@ function actualizarGaleria() {
 
   if (!p) return;
 
-  // Reset zoom and pan on image change
-  imgPrincipal.classList.remove('zoomed');
-  imgPrincipal.style.transform = 'scale(1) translate(0, 0)';
-
   // Imagen principal
   if (modalImagenes.length > 0) {
     const src = `img/${modalImagenes[modalImgIndex]}`;
@@ -349,39 +345,6 @@ function actualizarGaleria() {
     imgPrincipal.alt   = p.nombre;
     imgPrincipal.style.display = 'block';
     placeholder.style.display  = 'none';
-    imgPrincipal.onclick = () => {
-      const isZoomed = imgPrincipal.classList.toggle('zoomed');
-      if (isZoomed) {
-        // Add pan functionality
-        let isDragging = false;
-        let startX, startY, translateX = 0, translateY = 0;
-        imgPrincipal.onmousedown = (e) => {
-          isDragging = true;
-          startX = e.clientX - translateX;
-          startY = e.clientY - translateY;
-          e.preventDefault();
-        };
-        document.onmousemove = (e) => {
-          if (!isDragging) return;
-          translateX = e.clientX - startX;
-          translateY = e.clientY - startY;
-          // Limit pan to reasonable bounds
-          const maxPan = 150;
-          translateX = Math.max(-maxPan, Math.min(maxPan, translateX));
-          translateY = Math.max(-maxPan, Math.min(maxPan, translateY));
-          imgPrincipal.style.transform = `scale(1.5) translate(${translateX}px, ${translateY}px)`;
-        };
-        document.onmouseup = () => {
-          isDragging = false;
-        };
-      } else {
-        imgPrincipal.style.transform = 'scale(1) translate(0, 0)';
-        // Remove pan listeners
-        imgPrincipal.onmousedown = null;
-        document.onmousemove = null;
-        document.onmouseup = null;
-      }
-    };
     imgPrincipal.onerror = () => {
       imgPrincipal.style.display = 'none';
       placeholder.style.display  = 'flex';
