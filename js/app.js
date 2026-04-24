@@ -483,6 +483,103 @@ const CATALOGO_PRENDAS = [
     badge: 'nuevo',
     descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
   },
+  {
+    id: 40,
+    nombre: 'chompa',
+    precio: 45,
+    precio_original: '60',
+    imagenes: ['imagen40.jpeg'],
+    tallas: ['S', 'M', 'L'],
+    colores: ['Crema', 'Negro', 'Dorado'],
+    categoria: 'chompa',
+    badge: 'nuevo',
+    descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
+  },
+  {
+    id: 41,
+    nombre: 'chompa',
+    precio: 45,
+    precio_original: '60',
+    imagenes: ['imagen41.jpeg'],
+    tallas: ['S', 'M', 'L'],
+    colores: ['Crema', 'Negro', 'Dorado'],
+    categoria: 'chompa',
+    badge: 'nuevo',
+    descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
+  },
+  {
+    id: 42,
+    nombre: 'chompa',
+    precio: 45,
+    precio_original: '60',
+    imagenes: ['imagen42.jpeg'],
+    tallas: ['S', 'M', 'L'],
+    colores: ['Crema', 'Negro', 'Dorado'],
+    categoria: 'chompa',
+    badge: 'nuevo',
+    descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
+  },
+  {
+    id: 43,
+    nombre: 'chompa',
+    precio: 45,
+    precio_original: '60',
+    imagenes: ['imagen43.jpeg'],
+    tallas: ['S', 'M', 'L'],
+    colores: ['Crema', 'Negro', 'Dorado'],
+    categoria: 'chompa',
+    badge: 'nuevo',
+    descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
+  },
+  {
+    id: 44,
+    nombre: 'chompa',
+    precio: 45,
+    precio_original: '60',
+    imagenes: ['imagen44.jpeg'],
+    tallas: ['S', 'M', 'L'],
+    colores: ['Crema', 'Negro', 'Dorado'],
+    categoria: 'chompa',
+    badge: 'nuevo',
+    descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
+  },
+  {
+    id: 45,
+    nombre: 'chompa',
+    precio: 45,
+    precio_original: '60',
+    imagenes: ['imagen45.jpeg'],
+    tallas: ['S', 'M', 'L'],
+    colores: ['Crema', 'Negro', 'Dorado'],
+    categoria: 'chompa',
+    badge: 'nuevo',
+    descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
+  },
+  {
+    id: 46,
+    nombre: 'chompa',
+    precio: 45,
+    precio_original: '60',
+    imagenes: ['imagen46.jpeg'],
+    tallas: ['S', 'M', 'L'],
+    colores: ['Crema', 'Negro', 'Dorado'],
+    categoria: 'chompa',
+    badge: 'nuevo',
+    descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
+  },
+  {
+    id: 47,
+    nombre: 'chompa',
+    precio: 45,
+    precio_original: '60',
+    imagenes: ['imagen47.jpeg'],
+    tallas: ['S', 'M', 'L'],
+    colores: ['Crema', 'Negro', 'Dorado'],
+    categoria: 'chompa',
+    badge: 'nuevo',
+    descripcion: 'Lana de alta calidad, suave y duradera. Inversión para tu armario.'
+  },
+  
 ];
 /* ──────────────────────────────────────────────────────────── */
 
